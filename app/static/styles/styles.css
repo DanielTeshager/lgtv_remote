@@ -1,0 +1,17 @@
+.button-grid {
+	max-width: 300px;
+	margin: 30px auto;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+}
+.big-btn {
+	grid-column: span 3;
+}
+.status-light {
+	height: 20px;
+	width: 20px;
+	border-radius: 50%;
+	background-color: red;
+	margin: 10px auto;
+}
