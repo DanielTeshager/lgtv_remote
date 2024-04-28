@@ -23,7 +23,7 @@
 				height: 20px;
 				width: 20px;
 				border-radius: 50%;
-				background-color: red; /* Default to disconnected */
+				background-color: red;
 				margin: 10px auto;
 			}
 		</style>
@@ -32,33 +32,37 @@
 		<div class="container">
 			<h1 class="text-center mt-5">TV Remote Control</h1>
 			<div class="status-light"></div>
+			<div class="discovery-progress"></div>
 			<div class="button-grid">
 				<button class="btn btn-success big-btn" id="power-btn">Power</button>
 				<button class="btn btn-primary" id="discover-btn">Discover</button>
-				<button class="btn btn-primary">CH +</button>
-				<button class="btn btn-primary">CH -</button>
+				<button class="btn btn-secondary">CH +</button>
 				<button class="btn btn-secondary">Vol +</button>
+				<button class="btn btn-info mute-btn">Mute</button>
+				<button class="btn btn-secondary">CH -</button>
 				<button class="btn btn-secondary">Vol -</button>
-				<button class="btn btn-info">Mute</button>
 				<button class="btn btn-warning big-btn">Home</button>
-				<button class="btn btn-secondary">Up</button>
-				<button class="btn btn-secondary" style="grid-column-start: 2">
-					Back
-				</button>
 				<button class="btn btn-secondary">Left</button>
-				<button class="btn btn-secondary">OK</button>
+				<button class="btn btn-secondary" style="grid-column-start: 2">
+					Up
+				</button>
 				<button class="btn btn-secondary">Right</button>
+				<button class="btn btn-secondary">OK</button>
 				<button class="btn btn-secondary">Down</button>
-				<button class="btn btn-danger big-btn">Settings</button>
+				<button class="btn btn-secondary">Back</button>
+				<button class="btn btn-danger big-btn">Netflix</button>
 			</div>
 		</div>
 
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 		<script>
 			const statusLight = document.querySelector(".status-light");
+			const discoveryProgress = document.querySelector(".discovery-progress");
+			const discoverBtn = document.getElementById("discover-btn");
+			const muteBtn = document.querySelector(".mute-btn");
 
 			function sendCommand(command) {
-				fetch("http://127.0.0.1:5000/control", {
+				fetch("/control", {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -69,6 +73,9 @@
 					.then((data) => {
 						if (data.success) {
 							console.log("Command sent successfully");
+							if (command === "mute") {
+								muteBtn.textContent = data.mute_status ? "Unmute" : "Mute";
+							}
 						} else {
 							console.error(data.message);
 						}
@@ -81,6 +88,7 @@
 			document.querySelectorAll(".btn").forEach((button) => {
 				button.addEventListener("click", function () {
 					const command = this.textContent.toLowerCase().replace(/\s/g, "");
+					if (command == "discover") return;
 					console.log(command.trim());
 					sendCommand(command);
 				});
@@ -90,26 +98,28 @@
 				statusLight.style.backgroundColor = isConnected ? "green" : "red";
 			}
 
-			document
-				.getElementById("discover-btn")
-				.addEventListener("click", function () {
-					changeConnectivityStatus(false); // Set to trying to connect
-					fetch("http://127.0.0.1:5000/discover", { method: "POST" })
-						.then((response) => response.json())
-						.then((data) => {
-							if (data.success) {
+			discoverBtn.addEventListener("click", function () {
+				changeConnectivityStatus(false);
+				discoverBtn.disabled = true;
+				fetch("/discover", { method: "POST" })
+					.then((response) => response.json())
+					.then((data) => {
+						if (data.success) {
+							discoveryProgress.textContent = data.message;
+							if (data.message === "Discovery completed.") {
 								changeConnectivityStatus(true);
-								console.log("Connected to TV");
-							} else {
-								changeConnectivityStatus(false);
-								console.error("Failed to connect to TV");
+								discoverBtn.textContent = "Connected";
 							}
-						})
-						.catch((error) => {
+						} else {
 							changeConnectivityStatus(false);
-							console.error("Error connecting to TV:", error);
-						});
-				});
+							console.error(data.message);
+						}
+					})
+					.catch((error) => {
+						changeConnectivityStatus(false);
+						console.error("Error connecting to TV:", error);
+					});
+			});
 
 			document
 				.getElementById("power-btn")
