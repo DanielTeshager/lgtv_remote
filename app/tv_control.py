@@ -43,7 +43,7 @@ def discover_tv(store):
     print(store)
     time.sleep(2)
     system_control.notify(
-        "Hello, I'm being controlled by a God knows who. Someone's wife said we got a remote why do we need this hehe 😜")
+        "Cheers 🍻 to a weekend Flask project")
     yield "completed"
     return store
 
@@ -85,7 +85,7 @@ def control_tv(command):
 
 
 def system_state():
-    if system_control.info():
+    if system_control is not None:
         return True
     else:
         return False
